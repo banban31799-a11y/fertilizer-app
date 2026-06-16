@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>비료 환산 및 포대수 계산기</title>
+    
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%EB%B9%84%EB%A3%8C%20%ED%99%98%EC%82%B0%20%EA%B3%84%EC%82%B0%EA%B8%B0%22%2C%22short_name%22%3A%22%EB%B9%84%EB%A3%8C%EA%B3%84%EC%82%B0%EA%B8%B0%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f5f5%22%2C%22theme_color%22%3A%22%232e7d32%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20512%20512%27%3E%3Crect%20width%3D%27512%27%20height%3D%27512%27%20rx%3D%27100%27%20fill%3D%27%232e7d32%27%2F%3E%3Ctext%20y%3D%27340%27%20x%3D%2770%27%20font-size%3D%27280%27%3E%F0%9F%8C%B1%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+    
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --secondary-color: #e8f5e9;
+            --top-color: #1976d2;
+            --top-bg: #e3f2fd;
+            --text-color: #333;
+            --border-color: #ddd;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            color: var(--text-color);
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+        
+        #pwa-install-btn {
+            display: none;
+            width: 100%;
+            padding: 12px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .section-card.base { border-top: 4px solid var(--primary-color); }
+        .section-card.top { border-top: 4px solid var(--top-color); }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+        }
+        .base .section-title { color: var(--primary-color); }
+        .top .section-title { color: var(--top-color); }
+        
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .input-group {
+            flex: 1;
+        }
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 0.95rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #fafafa;
+        }
+        input:focus {
+            outline: none;
+            background-color: #fff;
+        }
+        .base input:focus { border-color: var(--primary-color); }
+        .top input:focus { border-color: var(--top-color); }
+
+        .target-box {
+            background-color: #fcfcfc;
+            border: 1px dashed #ccc;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            margin-bottom: 10px;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 6px 2px;
+            text-align: center;
+        }
+        th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+        }
+        .fertilizer-input {
+            padding: 6px 2px;
+            font-size: 0.82rem;
+            border-radius: 4px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+        }
+        .custom-kg-input {
+            width: 45px;
+            padding: 4px 2px;
+            font-size: 0.8rem;
+            text-align: center;
+            border: 1px solid #999;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .result-text {
+            font-weight: bold;
+        }
+        .base .result-text { color: var(--primary-color); }
+        .top .result-text { color: var(--top-color); }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn:active { background-color: #e0e0e0; }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #d32f2f;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .info-text {
+            font-size: 0.75rem;
+            color: #666;
+            text-align: center;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🌾 맞춤형 비료 환산 계산기</h1>
+    
+    <button id="pwa-install-btn">📱 홈 화면에 앱 설치하기</button>
+
+    <div class="section-card base">
+        <div class="section-title">🌱 밑거름 처방 및 환산</div>
+        
+        <div class="input-row">
+            <div class="input-group">
+                <label>처방서 사용량 (kg)</label>
+                <input type="number" id="base-amount" value="50" oninput="calculateAll()">
+            </div>
+            <div class="input-group">
+                <label>처방서 비료 N (%)</label>
+                <input type="number" id="base-n" value="21" oninput="calculateAll()">
+            </div>
+        </div>
+
+        <div class="target-box">
+            처방 기준 질소량: <span id="base-target-n" style="color:var(--primary-color)">10.50</span> kg
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 22%;">비료명</th>
+                    <th style="width: 13%;">N(%)</th>
+                    <th style="width: 20%;">필요량</th>
+                    <th style="width: 11%;">20k</th>
+                    <th style="width: 11%;">25k</th>
+                    <th style="width: 17%; background-color: #fffde7;"><input type="number" class="custom-kg-input" id="base-global-custom-kg" value="15" oninput="calculateAll()">kg</th>
+                    <th style="width: 6%;"></th>
+                </tr>
+            </thead>
+            <tbody id="base-tbody">
+                <tr>
+                    <td><input type="text" class="fertilizer-input" value="21-17-17" oninput="calculateAll()"></td>
+                    <td><input type="number" class="fertilizer-input n-val" value="21" oninput="calculateAll()"></td>
+                    <td><span class="result-text req-weight">0.0</span>kg</td>
+                    <td><span class="result-text bag-20">0</span>포</td>
+                    <td><span class="result-text bag-25">0</span>포</td>
+                    <td style="background-color: #fffde7;"><span class="result-text bag-custom">0</span>포</td>
+                    <td><button class="delete-btn" onclick="deleteRow(this)">×</button></td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="fertilizer-input" value="18-0-16" oninput="calculateAll()"></td>
+                    <td><input type="number" class="fertilizer-input n-val" value="18" oninput="calculateAll()"></td>
+                    <td><span class="result-text req-weight">0.0</span>kg</td>
+                    <td><span class="result-text bag-20">0</span>포</td>
+                    <td><span class="result-text bag-25">0</span>포</td>
+                    <td style="background-color: #fffde7;"><span class="result-text bag-custom">0</span>포</td>
+                    <td><button class="delete-btn" onclick="deleteRow(this)">×</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn" onclick="addRow('base-tbody')">+ 비료 종류 추가</button>
+    </div>
+
+    <div class="section-card top">
+        <div class="section-title">🌿 웃거름 처방 및 환산</div>
+        
+        <div class="input-row">
+            <div class="input-group">
+                <label>처방서 사용량 (kg)</label>
+                <input type="number" id="top-amount" value="59" oninput="calculateAll()">
+            </div>
+            <div class="input-group">
+                <label>처방서 비료 N (%)</label>
+                <input type="number" id="top-n" value="18" oninput="calculateAll()">
+            </div>
+        </div>
+
+        <div class="target-box">
+            처방 기준 질소량: <span id="top-target-n" style="color:var(--top-color)">10.62</span> kg
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 22%;">비료명</th>
+                    <th style="width: 13%;">N(%)</th>
+                    <th style="width: 20%;">필요량</th>
+                    <th style="width: 11%;">20k</th>
+                    <th style="width: 11%;">25k</th>
+                    <th style="width: 17%; background-color: #e3f2fd;"><input type="number" class="custom-kg-input" id="top-global-custom-kg" value="15" oninput="calculateAll()">kg</th>
+                    <th style="width: 6%;"></th>
+                </tr>
+            </thead>
+            <tbody id="top-tbody">
+                <tr>
+                    <td><input type="text" class="fertilizer-input" value="18-0-16" oninput="calculateAll()"></td>
+                    <td><input type="number" class="fertilizer-input n-val" value="18" oninput="calculateAll()"></td>
+                    <td><span class="result-text req-weight">0.0</span>kg</td>
+                    <td><span class="result-text bag-20">0</span>포</td>
+                    <td><span class="result-text bag-25">0</span>포</td>
+                    <td style="background-color: #e3f2fd;"><span class="result-text bag-custom">0</span>포</td>
+                    <td><button class="delete-btn" onclick="deleteRow(this)">×</button></td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="fertilizer-input" value="21-17-17" oninput="calculateAll()"></td>
+                    <td><input type="number" class="fertilizer-input n-val" value="21" oninput="calculateAll()"></td>
+                    <td><span class="result-text req-weight">0.0</span>kg</td>
+                    <td><span class="result-text bag-20">0</span>포</td>
+                    <td><span class="result-text bag-25">0</span>포</td>
+                    <td style="background-color: #e3f2fd;"><span class="result-text bag-custom">0</span>포</td>
+                    <td><button class="delete-btn" onclick="deleteRow(this)">×</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn" onclick="addRow('top-tbody')">+ 비료 종류 추가</button>
+    </div>
+    
+    <div class="info-text">
+        💡 <b>사용 팁:</b> 표 헤더의 노란색/파란색 <b>[ 15 ]kg</b> 입력창에 10, 15, 500 등 원하는 무게를 쓰면 그 무게에 맞는 포대 수가 바로 자동 계산됩니다.
+    </div>
+</div>
+
+<script>
+    function addRow(tbodyId) {
+        const tbody = document.getElementById(tbodyId);
+        const tr = document.createElement('tr');
+        const isTop = tbodyId === 'top-tbody';
+        const bgColor = isTop ? '#e3f2fd' : '#fffde7';
+        
+        tr.innerHTML = `
+            <td><input type="text" class="fertilizer-input" value="새 비료" oninput="calculateAll()"></td>
+            <td><input type="number" class="fertilizer-input n-val" value="10" oninput="calculateAll()"></td>
+            <td><span class="result-text req-weight">0.0</span>kg</td>
+            <td><span class="result-text bag-20">0</span>포</td>
+            <td><span class="result-text bag-25">0</span>포</td>
+            <td style="background-color: ${bgColor};"><span class="result-text bag-custom">0</span>포</td>
+            <td><button class="delete-btn" onclick="deleteRow(this)">×</button></td>
+        `;
+        tbody.appendChild(tr);
+        calculateAll();
+    }
+
+    function deleteRow(btn) {
+        const row = btn.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+        calculateAll();
+    }
+
+    function calculateAll() {
+        // 1. 밑거름 계산
+        const baseAmt = parseFloat(document.getElementById('base-amount').value) || 0;
+        const baseN = parseFloat(document.getElementById('base-n').value) || 0;
+        const baseTargetN = baseAmt * (baseN / 100);
+        document.getElementById('base-target-n').innerText = baseTargetN.toFixed(2);
+        
+        const baseCustomKg = parseFloat(document.getElementById('base-global-custom-kg').value) || 1;
+        processTbody('base-tbody', baseTargetN, baseCustomKg);
+
+        // 2. 웃거름 계산
+        const topAmt = parseFloat(document.getElementById('top-amount').value) || 0;
+        const topN = parseFloat(document.getElementById('top-n').value) || 0;
+        const topTargetN = topAmt * (topN / 100);
+        document.getElementById('top-target-n').innerText = topTargetN.toFixed(2);
+        
+        const topCustomKg = parseFloat(document.getElementById('top-global-custom-kg').value) || 1;
+        processTbody('top-tbody', topTargetN, topCustomKg);
+    }
+
+    function processTbody(tbodyId, targetN, customKg) {
+        const rows = document.getElementById(tbodyId).querySelectorAll('tr');
+        rows.forEach(row => {
+            const nValInput = row.querySelector('.n-val');
+            const reqWeightSpan = row.querySelector('.req-weight');
+            const bag20Span = row.querySelector('.bag-20');
+            const bag25Span = row.querySelector('.bag-25');
+            const bagCustomSpan = row.querySelector('.bag-custom');
+            
+            const nPct = parseFloat(nValInput.value) || 0;
+            
+            if (nPct > 0 && targetN > 0) {
+                const reqWeight = targetN / (nPct / 100);
+                reqWeightSpan.innerText = reqWeight.toFixed(1);
+                bag20Span.innerText = Math.ceil(reqWeight / 20);
+                bag25Span.innerText = Math.ceil(reqWeight / 25);
+                bagCustomSpan.innerText = Math.ceil(reqWeight / customKg);
+            } else {
+                reqWeightSpan.innerText = "0.0";
+                bag20Span.innerText = "0";
+                bag25Span.innerText = "0";
+                bagCustomSpan.innerText = "0";
+            }
+        });
+    }
+
+    // 초기 로딩 시 즉시 계산 실행
+    document.addEventListener("DOMContentLoaded", function() {
+        calculateAll();
+    });
+
+    // PWA 인프라 구축
+    if ('serviceWorker' in navigator) {
+        const swCode = "self.addEventListener('fetch', function(e) {});";
+        const blob = new Blob([swCode], {type: 'application/javascript'});
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW 실패', err));
+    }
+
+    let deferredPrompt;
+    const installBtn = document.getElementById('pwa-install-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') { installBtn.style.display = 'none'; }
+            deferredPrompt = null;
+        }
+    });
+</script>
+
+</body>
+</html>
